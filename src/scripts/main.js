@@ -180,6 +180,35 @@ const questText=document.querySelector('#questText');
 const townText=document.querySelector('#townText');
 const discoveredShops=new Set();
 const shopSpots=[{name:'The Market',x:-13,z:-9,desc:'Fresh fruit, festival treats and little treasures are waiting inside.'},{name:'Art House',x:13,z:-9,desc:'Meet local makers and discover colorful art from around MelaSquare.'},{name:'Café',x:-13,z:19,desc:'Take a break with a warm drink and something sweet.'},{name:'Garden Shop',x:13,z:19,desc:'Pick out flowers, seeds and cheerful plants for your home.'}];
+
+let currentInterior=null,returnPosition=null;
+const interiorRooms=[];
+function buildShopInterior(shop,index){
+ const cx=110+index*30,cz=110;
+ const g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
+ const palettes=[['#f2c17a','#a85c3f'],['#9bcac6','#507b80'],['#e9b39a','#a85f50'],['#b8d69a','#598a5c']];
+ const [wallColor,trimColor]=palettes[index];
+ cube(0,-.12,0,15,.35,13,mat('#d8c49e'),g);
+ cube(0,3.2,-6.35,15,6.4,.3,mat(wallColor),g);
+ cube(-7.35,3.2,0,.3,6.4,13,mat(wallColor),g);
+ cube(7.35,3.2,0,.3,6.4,13,mat(wallColor),g);
+ cube(0,6.35,0,15,.3,13,mat('#eadfc8'),g);
+ for(let x=-5;x<=5;x+=2.5){cube(x,2.1,-5.95,1.6,2.4,.22,mat(trimColor),g);cube(x,3.35,-5.8,1.8,.16,.45,M.gold,g)}
+ cube(0,1.05,-1.7,8,.35,1.7,mat(trimColor),g);
+ for(let x=-3;x<=3;x+=1.5){cube(x,1.55,-1.7,.12,.75,.12,M.cream,g)}
+ for(let x=-5;x<=5;x+=2.5){cube(x,.9,3.6,1.35,1.7,.65,mat(trimColor),g);cube(x,1.85,3.6,1.5,.16,.8,M.wood,g)}
+ if(index===0){for(let i=0;i<8;i++)sphere(-3.4+(i%4)*2.1,.9,3.4+Math.floor(i/4)*.5,.32,.32,.32,mat(['#e85d48','#f4c34f','#71b75d'][i%3]),g)}
+ if(index===1){for(let i=0;i<4;i++){const frame=cube(-3.8+i*2.5,3.6,-5.72,1.25,1.45,.15,mat(['#d98975','#7a9fcb','#e0bd66','#86b58c'][i]),g);}}
+ if(index===2){for(let i=0;i<3;i++){cylinder(-2+i*2,1.2,3.5,.42,.42,.35,M.wood,g,16);cylinder(-2+i*2,1.55,3.5,.32,.32,.35,mat('#f0d9ae'),g,16)}}
+ if(index===3){for(let i=0;i<6;i++){const pot=cylinder(-3.8+i*1.5,.85,3.6,.28,.22,.55,mat('#b96e50'),g,8);sphere(-3.8+i*1.5,1.45,3.6,.3,.48,.3,M.leaf2,g)}}
+ const exit=mesh(new THREE.TorusGeometry(.8,.09,8,24),mat('#ffe08a',.3,.1),0,1.1,5.45,g);exit.rotation.x=Math.PI/2;
+ const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=128;const ctx=labelCanvas.getContext('2d');ctx.fillStyle='#fff3d8';ctx.font='bold 46px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(shop.name.toUpperCase(),256,64);const tex=new THREE.CanvasTexture(labelCanvas);tex.colorSpace=THREE.SRGBColorSpace;
+ mesh(new THREE.PlaneGeometry(5,.85),new THREE.MeshBasicMaterial({map:tex,transparent:true}),0,5.3,-6.15,g);
+ interiorRooms.push({group:g,position:new THREE.Vector3(cx,0,cz),exit:new THREE.Vector3(cx,0,cz+4.5),shop});
+}
+function makeInteriors(){shopSpots.forEach((s,i)=>buildShopInterior(s,i));}
+
+makeInteriors();
 const interact=document.querySelector('#interact');const interactTitle=document.querySelector('#interactTitle');const interactText=document.querySelector('#interactText');let nearby=null,shownName=null;
 const keys={};let joy={x:0,y:0},active=false,last=0,yaw=.65,drag=null,sprintHeld=false;
 const sprintButton=document.querySelector('#sprint');
@@ -192,7 +221,7 @@ joyEl.addEventListener('pointerdown',e=>{joyEl.setPointerCapture(e.pointerId);mo
 function resetJoy(){joy.x=joy.y=0;stick.style.transform=''}joyEl.addEventListener('pointerup',resetJoy);joyEl.addEventListener('pointercancel',resetJoy);
 addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.startsWith('Arrow'))e.preventDefault();if(e.key.toLowerCase()==='e')doInteract()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 function doInteract(){if(!nearby)return;interactTitle.textContent=nearby.name;interactText.textContent=nearby.desc;interact.classList.remove('hidden')}
-document.querySelector('#interactClose').addEventListener('click',()=>interact.classList.add('hidden'));document.querySelector('#interactAction').addEventListener('click',()=>{if(!nearby)return;if(nearby.type==='shop'){const details={'The Market':'Market preview: fruit baskets, festival snacks and handmade keepsakes.','Art House':'Art House preview: colorful paintings, pottery and local crafts.','Café':'Café preview: cozy tables, pastries and refreshing drinks.','Garden Shop':'Garden preview: seed packets, potted flowers and garden decorations.'};interactText.textContent=details[nearby.name]||nearby.desc;document.querySelector('#interactAction').textContent='Looking around…';}else{const chats=['Mira: I heard there are seven glowing keepsakes hidden around the plaza!','Rolo: Follow the little paths between the shops to explore.','Lumi: Look near the gardens and fountain for something sparkling!'];interactText.textContent=chats[nearby.npc]||nearby.desc;document.querySelector('#interactAction').textContent='Nice!';}});
+document.querySelector('#interactClose').addEventListener('click',()=>interact.classList.add('hidden'));document.querySelector('#interactAction').addEventListener('click',()=>{if(!nearby)return;if(nearby.type==='shop'){const room=interiorRooms.find(r=>r.shop.name===nearby.name);if(room){returnPosition=player.position.clone();currentInterior=room;player.position.set(room.position.x,0,room.position.z+2.4);player.rotation.y=Math.PI;shownName=null;interact.classList.add('hidden');}}else if(nearby.type==='exit'){player.position.copy(returnPosition||new THREE.Vector3(0,0,10));currentInterior=null;returnPosition=null;shownName=null;interact.classList.add('hidden');}else{const chats=['Mira: I heard there are seven glowing keepsakes hidden around the plaza!','Rolo: Follow the little paths between the shops to explore.','Lumi: Look near the gardens and fountain for something sparkling!'];interactText.textContent=chats[nearby.npc]||nearby.desc;document.querySelector('#interactAction').textContent='Nice!';}});
 canvas.addEventListener('pointerdown',e=>{if(active){drag={x:e.clientX,y:e.clientY,yaw};canvas.setPointerCapture(e.pointerId)}});
 canvas.addEventListener('pointermove',e=>{if(drag)yaw=drag.yaw-(e.clientX-drag.x)*.006});
 canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
@@ -218,7 +247,7 @@ function animate(t){requestAnimationFrame(animate);const dt=Math.min(clock.getDe
 
  npcs.forEach((n,i)=>{const home=n.userData.home;const tx=home.x+Math.sin(t*.00035+i*2)*1.1,tz=home.z+Math.cos(t*.0003+i*2)*.8;n.position.x+=(tx-n.position.x)*dt*.22;n.position.z+=(tz-n.position.z)*dt*.22;n.rotation.y=Math.atan2(Math.cos(t*.00035+i*2),-Math.sin(t*.0003+i*2))});
  [...npcs,player].forEach((ch,i)=>{const moving=ch===player&&walking;ch.position.y+=(moving?Math.abs(Math.sin(phase))*.07:Math.sin(t*.002+ch.userData.phase)*.025)-ch.position.y*.12;ch.userData.limbs?.forEach(l=>{const swing=moving?Math.sin(phase+(l.part==='arm'?Math.PI:0))*.55:Math.sin(t*.002+ch.userData.phase)*.035;l.mesh.rotation.x=l.part==='arm'?swing:0;l.mesh.rotation.z=l.part==='arm'?l.side*(.55+swing*.35):l.side*.08});if(ch.userData.body)ch.userData.body.scale.y=.57+(moving?Math.sin(phase*2)*.025:Math.sin(t*.002+ch.userData.phase)*.012)});
- let candidate=null,best=999;for(const s of shopSpots){const d=Math.hypot(player.position.x-s.x,player.position.z-s.z);if(d<5&&d<best){best=d;candidate={name:s.name,desc:s.desc,type:'shop',shop:s}}}npcs.forEach((n,i)=>{const d=player.position.distanceTo(n.position);if(d<2.7&&d<best){best=d;candidate={name:['Mira','Rolo','Lumi'][i],desc:['Hi! Welcome to MelaSquare. Want to explore the town together?','Hey there! The plaza is full of little surprises.','Hello, traveler! The garden is my favorite place.'][i],type:'npc',npc:i}}});nearby=candidate;if(candidate&&candidate.type==='shop'&&!discoveredShops.has(candidate.shop.name)){discoveredShops.add(candidate.shop.name);townText.textContent='Shops discovered: '+discoveredShops.size+'/4';}interact.classList.toggle('hidden',!nearby);if(nearby&&nearby.name!==shownName){shownName=nearby.name;interactTitle.textContent=nearby.name;interactText.textContent=nearby.desc;document.querySelector('#interactAction').textContent=nearby.type==='shop'?'Explore shop':'Chat'}if(!nearby)shownName=null
+ let candidate=null,best=999;if(currentInterior){const d=player.position.distanceTo(currentInterior.exit);if(d<3.2)candidate={name:'Shop entrance',desc:'Head back out to the town square.',type:'exit'};}else{for(const s of shopSpots){const d=Math.hypot(player.position.x-s.x,player.position.z-s.z);if(d<5&&d<best){best=d;candidate={name:s.name,desc:s.desc,type:'shop',shop:s}}}npcs.forEach((n,i)=>{const d=player.position.distanceTo(n.position);if(d<2.7&&d<best){best=d;candidate={name:['Mira','Rolo','Lumi'][i],desc:['Hi! Welcome to MelaSquare. Want to explore the town together?','Hey there! The plaza is full of little surprises.','Hello, traveler! The garden is my favorite place.'][i],type:'npc',npc:i}}});}nearby=candidate;if(candidate&&candidate.type==='shop'&&!discoveredShops.has(candidate.shop.name)){discoveredShops.add(candidate.shop.name);townText.textContent='Shops discovered: '+discoveredShops.size+'/4';}interact.classList.toggle('hidden',!nearby);if(nearby&&nearby.name!==shownName){shownName=nearby.name;interactTitle.textContent=nearby.name;interactText.textContent=nearby.desc;document.querySelector('#interactAction').textContent=nearby.type==='shop'?'Enter shop':nearby.type==='exit'?'Return outside':'Chat'}if(!nearby)shownName=null
 }
 const target=new THREE.Vector3(player.position.x,1.1,player.position.z);
 const offset=new THREE.Vector3(Math.sin(yaw)*16,12,Math.cos(yaw)*16);
