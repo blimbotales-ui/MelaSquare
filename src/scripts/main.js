@@ -117,8 +117,7 @@ function gazebo(x,z){
  for(let i=0;i<8;i++){const a=i*Math.PI/4;const px=Math.cos(a)*2.65,pz=Math.sin(a)*2.65;cylinder(px,1.65,pz,.12,.16,3,M.wood,g,8)}
  const roof=mesh(new THREE.ConeGeometry(3.5,1.5,8),mat('#d88b62'),0,3.9,0,g);roof.rotation.y=Math.PI/8;
  cylinder(0,3.15,0,3.1,3.1,.16,M.cream,g,8);
- bench(-1.3,0,Math.PI/2);bench(1.3,0,-Math.PI/2);
-}
+ }
 function pond(x,z){
  const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
  const rim=mesh(new THREE.CylinderGeometry(5.2,5.2,.42,12),mat('#b5a17f'),0,.12,0,g);rim.scale.z=.78;
