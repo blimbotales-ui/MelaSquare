@@ -100,6 +100,16 @@ function lowPolyRocks(x,z){
  for(let i=0;i<4;i++){const rock=mesh(new THREE.DodecahedronGeometry(.45+((i*7)%3)*.12,0),mat(i%2?'#b9a88b':'#9e987c'),x+(i-1.5)*.55,.35,z+Math.sin(i)*.3);rock.rotation.set(i*.4,i*.8,i*.2)}
 }
 
+
+function makeKeepsake(x,z,index){
+ const g=new THREE.Group();g.position.set(x,1.05,z);scene.add(g);
+ const crystal=mesh(new THREE.OctahedronGeometry(.48,0),mat('#ffe27a',.22,.18),0,0,0,g);
+ crystal.rotation.y=Math.PI/4;
+ sphere(0,0,0,.16,.16,.16,mat('#fff9d7',.15,.1),g);
+ const halo=mesh(new THREE.TorusGeometry(.72,.035,8,32),mat('#f7ce65',.3,.2),0,-.32,0,g);halo.rotation.x=Math.PI/2;
+ g.userData={baseY:1.05,index,crystal};return g;
+}
+
 function buildWorld(){
  ground();fountain();arch();bunting();
  house(-13,-14,'MARKET','#f2b878','#d96c52');house(13,-14,'ART HOUSE','#a6c9c2','#547e85');
@@ -147,6 +157,10 @@ buildWorld();
 const player=makeCharacter('crown',0,10,.82);
 const npcs=[makeCharacter('curly',-5,-5,.95),makeCharacter('orange',5,-5,1),makeCharacter('lilac',-5,5,.9)];
 npcs.forEach((n,i)=>{n.userData.home=n.position.clone();n.userData.wander=i%2===0?1:0});
+const keepsakes=[[-8,0],[8,0],[0,-10],[0,10],[-20,0],[20,0],[0,23]].map((p,i)=>makeKeepsake(p[0],p[1],i));
+let foundKeepsakes=0;
+const gemCount=document.querySelector('#gemCount');
+const questText=document.querySelector('#questText');
 const shopSpots=[{name:'The Market',x:-13,z:-9,desc:'Fresh fruit, festival treats and little treasures are waiting inside.'},{name:'Art House',x:13,z:-9,desc:'Meet local makers and discover colorful art from around MelaSquare.'},{name:'Café',x:-13,z:19,desc:'Take a break with a warm drink and something sweet.'},{name:'Garden Shop',x:13,z:19,desc:'Pick out flowers, seeds and cheerful plants for your home.'}];
 const interact=document.querySelector('#interact');const interactTitle=document.querySelector('#interactTitle');const interactText=document.querySelector('#interactText');let nearby=null;
 const keys={};let joy={x:0,y:0},active=false,last=0,yaw=.65,drag=null;
@@ -168,6 +182,19 @@ function animate(t){requestAnimationFrame(animate);const dt=Math.min(clock.getDe
  let iz=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;
  const len=Math.hypot(ix,iz);const walking=len>.08;if(walking){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);player.position.x=THREE.MathUtils.clamp(player.position.x+dx*dt*6,-31,31);player.position.z=THREE.MathUtils.clamp(player.position.z+dz*dt*6,-31,31);player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.08}
  const phase=t*.012;
+
+ keepsakes.forEach((g,i)=>{
+  if(!g.visible)return;
+  g.rotation.y=t*.0015+i*.7;
+  g.position.y=g.userData.baseY+Math.sin(t*.002+i)*.18;
+  g.userData.crystal.rotation.x=Math.sin(t*.001+i)*.2;
+  if(player.position.distanceTo(g.position)<1.35){
+   g.visible=false;foundKeepsakes++;gemCount.textContent=foundKeepsakes;
+   const remaining=7-foundKeepsakes;
+   questText.textContent=remaining===0?'All 7 keepsakes found! Festival hunt complete!':remaining+' more keepsake'+(remaining===1?'':'s')+' to discover around town.';
+  }
+ });
+
  npcs.forEach((n,i)=>{const home=n.userData.home;const tx=home.x+Math.sin(t*.00035+i*2)*1.1,tz=home.z+Math.cos(t*.0003+i*2)*.8;n.position.x+=(tx-n.position.x)*dt*.22;n.position.z+=(tz-n.position.z)*dt*.22;n.rotation.y=Math.atan2(Math.cos(t*.00035+i*2),-Math.sin(t*.0003+i*2))});
  [...npcs,player].forEach((ch,i)=>{const moving=ch===player&&walking;ch.position.y+=(moving?Math.abs(Math.sin(phase))*.07:Math.sin(t*.002+ch.userData.phase)*.025)-ch.position.y*.12;ch.userData.limbs?.forEach(l=>{const swing=moving?Math.sin(phase+(l.part==='arm'?Math.PI:0))*.55:Math.sin(t*.002+ch.userData.phase)*.035;l.mesh.rotation.x=l.part==='arm'?swing:0;l.mesh.rotation.z=l.part==='arm'?l.side*(.55+swing*.35):l.side*.08});if(ch.userData.body)ch.userData.body.scale.y=.57+(moving?Math.sin(phase*2)*.025:Math.sin(t*.002+ch.userData.phase)*.012)});
  let candidate=null,best=999;for(const s of shopSpots){const d=Math.hypot(player.position.x-s.x,player.position.z-s.z);if(d<5&&d<best){best=d;candidate={name:s.name,desc:s.desc}}}npcs.forEach((n,i)=>{const d=player.position.distanceTo(n.position);if(d<2.7&&d<best){best=d;candidate={name:['Mira','Rolo','Lumi'][i],desc:['Hi! Welcome to MelaSquare. Want to explore the town together?','Hey there! The plaza is full of little surprises.','Hello, traveler! The garden is my favorite place.'][i]}}});nearby=candidate;interact.classList.toggle('hidden',!nearby);if(nearby){interactTitle.textContent=nearby.name;interactText.textContent=nearby.desc;document.querySelector('#interactAction').textContent='Interact'}
