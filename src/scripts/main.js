@@ -157,7 +157,7 @@ buildWorld();
 const player=makeCharacter('crown',0,10,.82);
 const npcs=[makeCharacter('curly',-5,-5,.95),makeCharacter('orange',5,-5,1),makeCharacter('lilac',-5,5,.9)];
 npcs.forEach((n,i)=>{n.userData.home=n.position.clone();n.userData.wander=i%2===0?1:0});
-const keepsakes=[[-8,0],[8,0],[0,-10],[0,10],[-20,0],[20,0],[0,23]].map((p,i)=>makeKeepsake(p[0],p[1],i));
+const keepsakes=[[-8,0],[8,0],[0,-10],[-10,10],[-20,0],[20,0],[0,23]].map((p,i)=>makeKeepsake(p[0],p[1],i));
 let foundKeepsakes=0;
 const gemCount=document.querySelector('#gemCount');
 const questText=document.querySelector('#questText');
