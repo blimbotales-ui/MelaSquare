@@ -192,7 +192,6 @@ function buildShopInterior(shop,index){
  cube(0,3.2,-6.35,15,6.4,.3,mat(wallColor),g);
  cube(-7.35,3.2,0,.3,6.4,13,mat(wallColor),g);
  cube(7.35,3.2,0,.3,6.4,13,mat(wallColor),g);
- cube(0,6.35,0,15,.3,13,mat('#eadfc8'),g);
  for(let x=-5;x<=5;x+=2.5){cube(x,2.1,-5.95,1.6,2.4,.22,mat(trimColor),g);cube(x,3.35,-5.8,1.8,.16,.45,M.gold,g)}
  cube(0,1.05,-1.7,8,.35,1.7,mat(trimColor),g);
  for(let x=-3;x<=3;x+=1.5){cube(x,1.55,-1.7,.12,.75,.12,M.cream,g)}
@@ -230,7 +229,7 @@ const clock=new THREE.Clock();
 function animate(t){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(active){
  let ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;
  let iz=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;
- const len=Math.hypot(ix,iz);const walking=len>.08;const running=sprintHeld||keys.shift;const speed=running?9:6;if(walking){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);const nx=THREE.MathUtils.clamp(player.position.x+dx*dt*speed,-31,31),nz=THREE.MathUtils.clamp(player.position.z+dz*dt*speed,-31,31);const blocked=([[-13,-14,4.1,3.6],[13,-14,4.1,3.6],[-13,14,4.1,3.6],[13,14,4.1,3.6]].some(([x,z,rx,rz])=>Math.abs(nx-x)<rx&&Math.abs(nz-z)<rz)||Math.hypot(nx,nz)<4.1||Math.hypot(nx-25,nz+24)<5.4);if(!blocked){player.position.x=nx;player.position.z=nz;}player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.08}
+ const len=Math.hypot(ix,iz);const walking=len>.08;const running=sprintHeld||keys.shift;const speed=running?9:6;if(walking){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);const nx=currentInterior?THREE.MathUtils.clamp(player.position.x+dx*dt*speed,currentInterior.position.x-6.1,currentInterior.position.x+6.1):THREE.MathUtils.clamp(player.position.x+dx*dt*speed,-31,31),nz=currentInterior?THREE.MathUtils.clamp(player.position.z+dz*dt*speed,currentInterior.position.z-4.8,currentInterior.position.z+4.8):THREE.MathUtils.clamp(player.position.z+dz*dt*speed,-31,31);const blocked=currentInterior?false:([[-13,-14,4.1,3.6],[13,-14,4.1,3.6],[-13,14,4.1,3.6],[13,14,4.1,3.6]].some(([x,z,rx,rz])=>Math.abs(nx-x)<rx&&Math.abs(nz-z)<rz)||Math.hypot(nx,nz)<4.1||Math.hypot(nx-25,nz+24)<5.4);if(!blocked){player.position.x=nx;player.position.z=nz;}player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.08}
  const phase=t*.012;
 
  keepsakes.forEach((g,i)=>{
