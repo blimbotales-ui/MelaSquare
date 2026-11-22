@@ -179,6 +179,7 @@ const gemCount=document.querySelector('#gemCount');
 const coinCount=document.querySelector('#coinCount');
 const questText=document.querySelector('#questText');
 const townText=document.querySelector('#townText');
+const coinText=document.querySelector('#coinText');
 const discoveredShops=new Set();
 const shopSpots=[{name:'The Market',x:-13,z:-9,desc:'Fresh fruit, festival treats and little treasures are waiting inside.'},{name:'Art House',x:13,z:-9,desc:'Meet local makers and discover colorful art from around MelaSquare.'},{name:'Café',x:-13,z:19,desc:'Take a break with a warm drink and something sweet.'},{name:'Garden Shop',x:13,z:19,desc:'Pick out flowers, seeds and cheerful plants for your home.'}];
 
@@ -237,7 +238,7 @@ function animate(t){requestAnimationFrame(animate);const dt=Math.min(clock.getDe
  const len=Math.hypot(ix,iz);const walking=len>.08;const running=sprintHeld||keys.shift;const speed=running?9:6;if(walking){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);const nx=currentInterior?THREE.MathUtils.clamp(player.position.x+dx*dt*speed,currentInterior.position.x-6.1,currentInterior.position.x+6.1):THREE.MathUtils.clamp(player.position.x+dx*dt*speed,-31,31),nz=currentInterior?THREE.MathUtils.clamp(player.position.z+dz*dt*speed,currentInterior.position.z-4.8,currentInterior.position.z+4.8):THREE.MathUtils.clamp(player.position.z+dz*dt*speed,-31,31);const blocked=currentInterior?false:([[-13,-14,4.1,3.6],[13,-14,4.1,3.6],[-13,14,4.1,3.6],[13,14,4.1,3.6]].some(([x,z,rx,rz])=>Math.abs(nx-x)<rx&&Math.abs(nz-z)<rz)||Math.hypot(nx,nz)<4.1||Math.hypot(nx-25,nz+24)<5.4);if(!blocked){player.position.x=nx;player.position.z=nz;}player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.08}
  const phase=t*.012;
 
- shopCoins.forEach(c=>{if(c.taken)return;c.mesh.rotation.z=t*.002;if(player.position.distanceTo(c.position)<1.1){c.taken=true;c.mesh.visible=false;coinsCollected++;coinCount.textContent=coinsCollected;}});
+ shopCoins.forEach(c=>{if(c.taken)return;c.mesh.rotation.z=t*.002;if(player.position.distanceTo(c.position)<1.1){c.taken=true;c.mesh.visible=false;coinsCollected++;coinCount.textContent=coinsCollected;coinText.textContent=coinsCollected===12?'All 12 shop coins collected! You are a MelaSquare treasure champion!':(12-coinsCollected)+' golden shop coin'+(12-coinsCollected===1?'':'s')+' left to collect.';}});
  keepsakes.forEach((g,i)=>{
   if(!g.visible)return;
   g.rotation.y=t*.0015+i*.7;
