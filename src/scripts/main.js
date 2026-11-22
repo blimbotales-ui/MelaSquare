@@ -206,6 +206,7 @@ function buildShopInterior(shop,index){
  const exit=mesh(new THREE.TorusGeometry(.8,.09,8,24),mat('#ffe08a',.3,.1),0,1.1,5.45,g);exit.rotation.x=Math.PI/2;
  const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=128;const ctx=labelCanvas.getContext('2d');ctx.fillStyle='#fff3d8';ctx.font='bold 46px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(shop.name.toUpperCase(),256,64);const tex=new THREE.CanvasTexture(labelCanvas);tex.colorSpace=THREE.SRGBColorSpace;
  mesh(new THREE.PlaneGeometry(5,.85),new THREE.MeshBasicMaterial({map:tex,transparent:true}),0,5.3,-6.15,g);
+ const keeper=makeCharacter(['orange','curly','lilac','crown'][index],0,0,.62);g.add(keeper);keeper.position.set(0,0,-3.7);keeper.rotation.y=Math.PI;
  for(let n=0;n<3;n++){const coin=mesh(new THREE.TorusGeometry(.28,.09,8,18),mat('#ffd45e',.22,.45),-4+n*4,.9,1.2,g);coin.rotation.x=Math.PI/2;shopCoins.push({mesh:coin,position:new THREE.Vector3(cx-4+n*4,.9,cz+1.2),taken:false});}
  interiorRooms.push({group:g,position:new THREE.Vector3(cx,0,cz),exit:new THREE.Vector3(cx,0,cz+4.5),shop});
 }
