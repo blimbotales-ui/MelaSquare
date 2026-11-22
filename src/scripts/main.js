@@ -30,7 +30,7 @@ const mat=(color,roughness=.78,metalness=0)=>new THREE.MeshStandardMaterial({col
 const M={grass:mat('#77b96d'),grass2:mat('#8bc978'),path:mat('#e8d7b4'),stone:mat('#b6a98e'),cream:mat('#fff0cf'),wood:mat('#98613f'),darkwood:mat('#62402f'),blue:mat('#277bd0'),purple:mat('#9c6bc4'),pink:mat('#e98ab0'),gold:mat('#f4c75e'),leaf:mat('#398b59'),leaf2:mat('#62ae67'),water:mat('#55c9d0',.2,.15)};
 function mesh(geo,material,x,y,z,parent=scene){const o=new THREE.Mesh(geo,material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function cube(x,y,z,sx,sy,sz,material,parent=scene){return mesh(new THREE.BoxGeometry(sx,sy,sz),material,x,y,z,parent)}
-function sphere(x,y,z,sx,sy,sz,material,parent=scene){return mesh(new THREE.SphereGeometry(1,20,16),material,x,y,z,parent).scale.set(sx,sy,sz)}
+function sphere(x,y,z,sx,sy,sz,material,parent=scene){const o=mesh(new THREE.SphereGeometry(1,20,16),material,x,y,z,parent);o.scale.set(sx,sy,sz);return o}
 function cylinder(x,y,z,rt,rb,h,material,parent=scene,n=12){return mesh(new THREE.CylinderGeometry(rt,rb,h,n),material,x,y,z,parent)}
 function ground(){
  cube(0,-.35,0,100,.6,100,M.grass);
