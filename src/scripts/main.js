@@ -106,7 +106,9 @@ function buildWorld(){
  house(-13,14,'CAFE','#e9a58b','#bd7059');house(13,14,'GARDEN','#a5cb86','#5b955d');
  for(const [x,z,s] of [[-23,-20,1.1],[23,-20,1.1],[-23,20,1],[23,20,1],[-28,0,.9],[28,0,.9],[0,-29,1.2],[0,29,1.2],[-9,-25,.8],[9,25,.8]])tree(x,z,s);
  for(const [x,z] of [[-5,-8],[5,-8],[-5,8],[5,8],[-18,0],[18,0],[0,-23],[0,23]])lamp(x,z);
- bench(-5,4,.3);bench(5,-4,Math.PI+.3);\n marketStall(-8,-9,'#e9a34d');marketStall(8,9,'#d87c9e');\n lowPolyRocks(-26,11);lowPolyRocks(26,-11);
+ bench(-5,4,.3);bench(5,-4,Math.PI+.3);
+ marketStall(-8,-9,'#e9a34d');marketStall(8,9,'#d87c9e');
+ lowPolyRocks(-26,11);lowPolyRocks(26,-11);
  // decorative market awnings
  for(const [x,z,col] of [[-20,-8,'#f3bd61'],[20,8,'#e88fb0']]){cube(x,1.7,z,4,.16,2.4,mat(col));for(let i=0;i<4;i++)cube(x-1.5+i,1.35,z, .08,.65,2.4,M.cream)}
  for(let i=0;i<28;i++){const a=i/28*Math.PI*2;const x=Math.cos(a)*5.6,z=Math.sin(a)*5.6;sphere(x, .22,z,.12,.12,.12,M.gold)}
@@ -143,7 +145,8 @@ function makeCharacter(kind,x,z,scale=1){
 }
 buildWorld();
 const player=makeCharacter('crown',0,10,.82);
-const npcs=[makeCharacter('curly',-5,-5,.95),makeCharacter('orange',5,-5,1),makeCharacter('lilac',-5,5,.9)];\nnpcs.forEach((n,i)=>{n.userData.home=n.position.clone();n.userData.wander=i%2===0?1:0});
+const npcs=[makeCharacter('curly',-5,-5,.95),makeCharacter('orange',5,-5,1),makeCharacter('lilac',-5,5,.9)];
+npcs.forEach((n,i)=>{n.userData.home=n.position.clone();n.userData.wander=i%2===0?1:0});
 const shopSpots=[{name:'The Market',x:-13,z:-9,desc:'Fresh fruit, festival treats and little treasures are waiting inside.'},{name:'Art House',x:13,z:-9,desc:'Meet local makers and discover colorful art from around MelaSquare.'},{name:'Café',x:-13,z:19,desc:'Take a break with a warm drink and something sweet.'},{name:'Garden Shop',x:13,z:19,desc:'Pick out flowers, seeds and cheerful plants for your home.'}];
 const interact=document.querySelector('#interact');const interactTitle=document.querySelector('#interactTitle');const interactText=document.querySelector('#interactText');let nearby=null;
 const keys={};let joy={x:0,y:0},active=false,last=0,yaw=.65,drag=null;
