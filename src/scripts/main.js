@@ -128,7 +128,7 @@ addEventListener('resize',resize);
 function moveJoy(e){const r=joyEl.getBoundingClientRect();let dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,l=Math.hypot(dx,dy),m=35;if(l>m){dx=dx/l*m;dy=dy/l*m}joy.x=dx/m;joy.y=dy/m;stick.style.transform='translate('+dx+'px,'+dy+'px)'}
 joyEl.addEventListener('pointerdown',e=>{joyEl.setPointerCapture(e.pointerId);moveJoy(e)});joyEl.addEventListener('pointermove',e=>{if(e.buttons)moveJoy(e)});
 function resetJoy(){joy.x=joy.y=0;stick.style.transform=''}joyEl.addEventListener('pointerup',resetJoy);joyEl.addEventListener('pointercancel',resetJoy);
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.startsWith('Arrow'))e.preventDefault()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.startsWith('Arrow'))e.preventDefault();if(e.key.toLowerCase()==='e')doInteract()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 function doInteract(){if(!nearby)return;interactTitle.textContent=nearby.name;interactText.textContent=nearby.desc;interact.classList.remove('hidden')}
 document.querySelector('#interactClose').addEventListener('click',()=>interact.classList.add('hidden'));document.querySelector('#interactAction').addEventListener('click',()=>{interactText.textContent='This place is getting ready to open. More activities are coming soon!';document.querySelector('#interactAction').textContent='Coming soon'});
 canvas.addEventListener('pointerdown',e=>{if(active){drag={x:e.clientX,y:e.clientY,yaw};canvas.setPointerCapture(e.pointerId)}});
