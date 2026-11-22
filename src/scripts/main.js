@@ -193,6 +193,10 @@ function buildShopInterior(shop,index){
  const palettes=[['#f2c17a','#a85c3f'],['#9bcac6','#507b80'],['#e9b39a','#a85f50'],['#b8d69a','#598a5c']];
  const [wallColor,trimColor]=palettes[index];
  cube(0,-.12,0,15,.35,13,mat('#d8c49e'),g);
+ const rug=mesh(new THREE.CircleGeometry(3.05,40),mat(['#d98a58','#6d9e9a','#c77f78','#7da66a'][index]),0,.075,1.1,g);rug.rotation.x=-Math.PI/2;
+ const rugEdge=mesh(new THREE.TorusGeometry(2.9,.055,8,48),M.gold,0,.09,1.1,g);rugEdge.rotation.x=Math.PI/2;
+ const pendant=cylinder(0,5.45,0,.045,.045,.8,M.darkwood,g,8);sphere(0,5.02,0,.28,.22,.28,M.gold,g);
+ const roomLight=new THREE.PointLight('#ffe6b6',1.15,18);roomLight.position.set(0,4.7,0);g.add(roomLight);
  cube(0,3.2,-6.35,15,6.4,.3,mat(wallColor),g);
  cube(-7.35,3.2,0,.3,6.4,13,mat(wallColor),g);
  cube(7.35,3.2,0,.3,6.4,13,mat(wallColor),g);
