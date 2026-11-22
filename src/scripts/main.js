@@ -176,6 +176,7 @@ npcs.forEach((n,i)=>{n.userData.home=n.position.clone();n.userData.wander=i%2===
 const keepsakes=[[-8,0],[8,0],[0,-10],[-10,10],[-20,0],[20,0],[0,23]].map((p,i)=>makeKeepsake(p[0],p[1],i));
 let foundKeepsakes=0;
 const gemCount=document.querySelector('#gemCount');
+const coinCount=document.querySelector('#coinCount');
 const questText=document.querySelector('#questText');
 const townText=document.querySelector('#townText');
 const discoveredShops=new Set();
@@ -183,6 +184,8 @@ const shopSpots=[{name:'The Market',x:-13,z:-9,desc:'Fresh fruit, festival treat
 
 let currentInterior=null,returnPosition=null;
 const interiorRooms=[];
+const shopCoins=[];
+let coinsCollected=0;
 function buildShopInterior(shop,index){
  const cx=110+index*30,cz=110;
  const g=new THREE.Group();g.position.set(cx,0,cz);scene.add(g);
@@ -203,6 +206,7 @@ function buildShopInterior(shop,index){
  const exit=mesh(new THREE.TorusGeometry(.8,.09,8,24),mat('#ffe08a',.3,.1),0,1.1,5.45,g);exit.rotation.x=Math.PI/2;
  const labelCanvas=document.createElement('canvas');labelCanvas.width=512;labelCanvas.height=128;const ctx=labelCanvas.getContext('2d');ctx.fillStyle='#fff3d8';ctx.font='bold 46px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(shop.name.toUpperCase(),256,64);const tex=new THREE.CanvasTexture(labelCanvas);tex.colorSpace=THREE.SRGBColorSpace;
  mesh(new THREE.PlaneGeometry(5,.85),new THREE.MeshBasicMaterial({map:tex,transparent:true}),0,5.3,-6.15,g);
+ for(let n=0;n<3;n++){const coin=mesh(new THREE.TorusGeometry(.28,.09,8,18),mat('#ffd45e',.22,.45),-4+n*4,.9,1.2,g);coin.rotation.x=Math.PI/2;shopCoins.push({mesh:coin,position:new THREE.Vector3(cx-4+n*4,.9,cz+1.2),taken:false});}
  interiorRooms.push({group:g,position:new THREE.Vector3(cx,0,cz),exit:new THREE.Vector3(cx,0,cz+4.5),shop});
 }
 function makeInteriors(){shopSpots.forEach((s,i)=>buildShopInterior(s,i));}
@@ -232,6 +236,7 @@ function animate(t){requestAnimationFrame(animate);const dt=Math.min(clock.getDe
  const len=Math.hypot(ix,iz);const walking=len>.08;const running=sprintHeld||keys.shift;const speed=running?9:6;if(walking){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);const nx=currentInterior?THREE.MathUtils.clamp(player.position.x+dx*dt*speed,currentInterior.position.x-6.1,currentInterior.position.x+6.1):THREE.MathUtils.clamp(player.position.x+dx*dt*speed,-31,31),nz=currentInterior?THREE.MathUtils.clamp(player.position.z+dz*dt*speed,currentInterior.position.z-4.8,currentInterior.position.z+4.8):THREE.MathUtils.clamp(player.position.z+dz*dt*speed,-31,31);const blocked=currentInterior?false:([[-13,-14,4.1,3.6],[13,-14,4.1,3.6],[-13,14,4.1,3.6],[13,14,4.1,3.6]].some(([x,z,rx,rz])=>Math.abs(nx-x)<rx&&Math.abs(nz-z)<rz)||Math.hypot(nx,nz)<4.1||Math.hypot(nx-25,nz+24)<5.4);if(!blocked){player.position.x=nx;player.position.z=nz;}player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.08}
  const phase=t*.012;
 
+ shopCoins.forEach(c=>{if(c.taken)return;c.mesh.rotation.z=t*.002;if(player.position.distanceTo(c.position)<1.1){c.taken=true;c.mesh.visible=false;coinsCollected++;coinCount.textContent=coinsCollected;}});
  keepsakes.forEach((g,i)=>{
   if(!g.visible)return;
   g.rotation.y=t*.0015+i*.7;
