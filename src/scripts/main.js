@@ -110,8 +110,25 @@ function makeKeepsake(x,z,index){
  g.userData={baseY:1.05,index,crystal};return g;
 }
 
+
+function gazebo(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
+ cylinder(0,.16,0,3.5,3.5,.3,mat('#c9b58f'),g,8);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4;const px=Math.cos(a)*2.65,pz=Math.sin(a)*2.65;cylinder(px,1.65,pz,.12,.16,3,M.wood,g,8)}
+ const roof=mesh(new THREE.ConeGeometry(3.5,1.5,8),mat('#d88b62'),0,3.9,0,g);roof.rotation.y=Math.PI/8;
+ cylinder(0,3.15,0,3.1,3.1,.16,M.cream,g,8);
+ bench(-1.3,0,Math.PI/2);bench(1.3,0,-Math.PI/2);
+}
+function pond(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
+ const rim=mesh(new THREE.CylinderGeometry(5.2,5.2,.42,12),mat('#b5a17f'),0,.12,0,g);rim.scale.z=.78;
+ const water=mesh(new THREE.CylinderGeometry(4.8,4.8,.12,12),mat('#55c9d0',.18,.2),0,.36,0,g);water.scale.z=.78;
+ for(let i=0;i<6;i++){const a=i*Math.PI/3;const lily=sphere(Math.cos(a)*2.7,.47,Math.sin(a)*2,.55,.06,.34,mat('#5eaa68'),g);lily.rotation.y=a;}
+ for(let i=0;i<5;i++){const a=i*1.1;const reed=cylinder(Math.cos(a)*4.6,.75,Math.sin(a)*3.5,.045,.06,.9,M.leaf,g,6);reed.rotation.z=Math.cos(a)*.2;}
+}
+
 function buildWorld(){
- ground();fountain();arch();bunting();
+ ground();fountain();arch();bunting();gazebo(-25,-24);pond(25,-24);
  house(-13,-14,'MARKET','#f2b878','#d96c52');house(13,-14,'ART HOUSE','#a6c9c2','#547e85');
  house(-13,14,'CAFE','#e9a58b','#bd7059');house(13,14,'GARDEN','#a5cb86','#5b955d');
  for(const [x,z,s] of [[-23,-20,1.1],[23,-20,1.1],[-23,20,1],[23,20,1],[-28,0,.9],[28,0,.9],[0,-29,1.2],[0,29,1.2],[-9,-25,.8],[9,25,.8]])tree(x,z,s);
@@ -165,7 +182,10 @@ const townText=document.querySelector('#townText');
 const discoveredShops=new Set();
 const shopSpots=[{name:'The Market',x:-13,z:-9,desc:'Fresh fruit, festival treats and little treasures are waiting inside.'},{name:'Art House',x:13,z:-9,desc:'Meet local makers and discover colorful art from around MelaSquare.'},{name:'Café',x:-13,z:19,desc:'Take a break with a warm drink and something sweet.'},{name:'Garden Shop',x:13,z:19,desc:'Pick out flowers, seeds and cheerful plants for your home.'}];
 const interact=document.querySelector('#interact');const interactTitle=document.querySelector('#interactTitle');const interactText=document.querySelector('#interactText');let nearby=null,shownName=null;
-const keys={};let joy={x:0,y:0},active=false,last=0,yaw=.65,drag=null;
+const keys={};let joy={x:0,y:0},active=false,last=0,yaw=.65,drag=null,sprintHeld=false;
+const sprintButton=document.querySelector('#sprint');
+sprintButton.addEventListener('pointerdown',e=>{e.preventDefault();sprintHeld=true;sprintButton.setPointerCapture(e.pointerId)});
+function stopSprint(){sprintHeld=false}sprintButton.addEventListener('pointerup',stopSprint);sprintButton.addEventListener('pointercancel',stopSprint);sprintButton.addEventListener('lostpointercapture',stopSprint);
 function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5))}
 addEventListener('resize',resize);
 function moveJoy(e){const r=joyEl.getBoundingClientRect();let dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,l=Math.hypot(dx,dy),m=35;if(l>m){dx=dx/l*m;dy=dy/l*m}joy.x=dx/m;joy.y=dy/m;stick.style.transform='translate('+dx+'px,'+dy+'px)'}
@@ -182,7 +202,7 @@ const clock=new THREE.Clock();
 function animate(t){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(active){
  let ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;
  let iz=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;
- const len=Math.hypot(ix,iz);const walking=len>.08;if(walking){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);player.position.x=THREE.MathUtils.clamp(player.position.x+dx*dt*6,-31,31);player.position.z=THREE.MathUtils.clamp(player.position.z+dz*dt*6,-31,31);player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.08}
+ const len=Math.hypot(ix,iz);const walking=len>.08;const running=sprintHeld||keys.shift;const speed=running?9:6;if(walking){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);const nx=THREE.MathUtils.clamp(player.position.x+dx*dt*speed,-31,31),nz=THREE.MathUtils.clamp(player.position.z+dz*dt*speed,-31,31);const blocked=([[-13,-14,4.1,3.6],[13,-14,4.1,3.6],[-13,14,4.1,3.6],[13,14,4.1,3.6]].some(([x,z,rx,rz])=>Math.abs(nx-x)<rx&&Math.abs(nz-z)<rz)||Math.hypot(nx,nz)<4.1||Math.hypot(nx-25,nz+24)<5.4);if(!blocked){player.position.x=nx;player.position.z=nz;}player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.08}
  const phase=t*.012;
 
  keepsakes.forEach((g,i)=>{
