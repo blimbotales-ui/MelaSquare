@@ -90,7 +90,7 @@ function buildWorld(){
 function makeCharacter(kind,x,z,scale=1){
  const root=new THREE.Group();root.position.set(x,0,z);root.scale.setScalar(scale);scene.add(root);
  const blue=mat('#2788e8',.35),blueDark=mat('#1553a8'),skin=mat(kind==='curly'?'#a77acb':kind==='orange'?'#ff8054':kind==='lilac'?'#c28bd9':'#3998ee',.36),dark=mat('#211b36',.3),white=mat('#fff8ed',.3),pink=mat('#f58fc4',.4);
- const body=sphere(0,1.02,0,.58,.57,.43,skin,root);
+ const limbs=[];\n const body=sphere(0,1.02,0,.58,.57,.43,skin,root);
  const head=sphere(0,2.05,0,.83,.78,.67,skin,root);
  // glossy cheeks
  sphere(-.57,1.9,.48,.18,.12,.08,pink,root);sphere(.57,1.9,.48,.18,.12,.08,pink,root);
@@ -99,7 +99,7 @@ function makeCharacter(kind,x,z,scale=1){
  for(const ex of [-.27,.27]){const brow=cube(ex,2.47,.59,.36,.09,.09,dark,root);brow.rotation.z=ex<0?-.18:.18}
  const smile=mesh(new THREE.TorusGeometry(.19,.045,8,24,Math.PI),dark,0,1.82,.61,root);smile.rotation.z=Math.PI;
  // arms and feet
- for(const side of [-1,1]){const arm=mesh(new THREE.CapsuleGeometry(.12,.48,4,8),skin,side*.69,1.12,0,root);arm.rotation.z=side*.65;const foot=sphere(side*.27,.28,.08,.2,.28,.28,kind==='orange'?M.gold:blueDark,root);foot.rotation.z=side*.12}
+ for(const side of [-1,1]){const arm=mesh(new THREE.CapsuleGeometry(.12,.48,4,8),skin,side*.69,1.12,0,root);arm.rotation.z=side*.65;limbs.push({mesh:arm,side,part:'arm'});const foot=sphere(side*.27,.28,.08,.2,.28,.28,kind==='orange'?M.gold:blueDark,root);foot.rotation.z=side*.12;limbs.push({mesh:foot,side,part:'foot'})}
  if(kind==='crown'){
   sphere(0,2.79,0,.42,.18,.38,M.gold,root);
   const crown=mesh(new THREE.ConeGeometry(.48,.58,5),mat('#16b5a6',.3,.1),0,3.1,0,root);crown.rotation.y=.3;
@@ -114,18 +114,18 @@ function makeCharacter(kind,x,z,scale=1){
   cube(0,2.76,0,1.05,.22,.82,mat('#9e75cb'),root);
   for(let i=0;i<3;i++)sphere(-.2+i*.2,2.9,.05,.08,.08,.08,M.cream,root);
  }
- root.userData.phase=Math.random()*6;root.userData.kind=kind;return root;
+ root.userData.phase=Math.random()*6;root.userData.kind=kind;root.userData.limbs=limbs;root.userData.body=body;return root;
 }
 buildWorld();
 const player=makeCharacter('crown',0,10,.82);
-const npcs=[makeCharacter('curly',-5,-5,.95),makeCharacter('orange',5,-5,1),makeCharacter('lilac',-5,5,.9)];
+const npcs=[makeCharacter('curly',-5,-5,.95),makeCharacter('orange',5,-5,1),makeCharacter('lilac',-5,5,.9)];\nconst shopSpots=[{name:'The Market',x:-13,z:-9,desc:'Fresh fruit, festival treats and little treasures are waiting inside.'},{name:'Art House',x:13,z:-9,desc:'Meet local makers and discover colorful art from around MelaSquare.'},{name:'Café',x:-13,z:19,desc:'Take a break with a warm drink and something sweet.'},{name:'Garden Shop',x:13,z:19,desc:'Pick out flowers, seeds and cheerful plants for your home.'}];\nconst interact=document.querySelector('#interact');const interactTitle=document.querySelector('#interactTitle');const interactText=document.querySelector('#interactText');let nearby=null;
 const keys={};let joy={x:0,y:0},active=false,last=0,yaw=.65,drag=null;
 function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5))}
 addEventListener('resize',resize);
 function moveJoy(e){const r=joyEl.getBoundingClientRect();let dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,l=Math.hypot(dx,dy),m=35;if(l>m){dx=dx/l*m;dy=dy/l*m}joy.x=dx/m;joy.y=dy/m;stick.style.transform='translate('+dx+'px,'+dy+'px)'}
 joyEl.addEventListener('pointerdown',e=>{joyEl.setPointerCapture(e.pointerId);moveJoy(e)});joyEl.addEventListener('pointermove',e=>{if(e.buttons)moveJoy(e)});
 function resetJoy(){joy.x=joy.y=0;stick.style.transform=''}joyEl.addEventListener('pointerup',resetJoy);joyEl.addEventListener('pointercancel',resetJoy);
-addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.startsWith('Arrow'))e.preventDefault()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.startsWith('Arrow'))e.preventDefault()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);\nfunction doInteract(){if(!nearby)return;interactTitle.textContent=nearby.name;interactText.textContent=nearby.desc;interact.classList.remove('hidden')}\ndocument.querySelector('#interactClose').addEventListener('click',()=>interact.classList.add('hidden'));document.querySelector('#interactAction').addEventListener('click',()=>{interactText.textContent='This place is getting ready to open. More activities are coming soon!';document.querySelector('#interactAction').textContent='Coming soon'});
 canvas.addEventListener('pointerdown',e=>{if(active){drag={x:e.clientX,y:e.clientY,yaw};canvas.setPointerCapture(e.pointerId)}});
 canvas.addEventListener('pointermove',e=>{if(drag)yaw=drag.yaw-(e.clientX-drag.x)*.006});
 canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
@@ -134,12 +134,12 @@ const clock=new THREE.Clock();
 function animate(t){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(active){
  let ix=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x;
  let iz=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y;
- const len=Math.hypot(ix,iz);if(len>.08){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);player.position.x=THREE.MathUtils.clamp(player.position.x+dx*dt*6,-31,31);player.position.z=THREE.MathUtils.clamp(player.position.z+dz*dt*6,-31,31);player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.06}
+ const len=Math.hypot(ix,iz);const walking=len>.08;if(walking){ix/=len;iz/=len;const dx=ix*Math.cos(yaw)-iz*Math.sin(yaw),dz=ix*Math.sin(yaw)+iz*Math.cos(yaw);player.position.x=THREE.MathUtils.clamp(player.position.x+dx*dt*6,-31,31);player.position.z=THREE.MathUtils.clamp(player.position.z+dz*dt*6,-31,31);player.rotation.y=Math.atan2(dx,dz);player.position.y=Math.abs(Math.sin(t*.012))*.08}\n const phase=t*.012;[...npcs,player].forEach((ch,i)=>{const moving=ch===player&&walking;ch.position.y+=(moving?Math.abs(Math.sin(phase))*.07:Math.sin(t*.002+ch.userData.phase)*.025)-ch.position.y*.12;ch.userData.limbs?.forEach(l=>{const swing=moving?Math.sin(phase+(l.part==='arm'?Math.PI:0))*.55:Math.sin(t*.002+ch.userData.phase)*.035;l.mesh.rotation.x=l.part==='arm'?swing:0;l.mesh.rotation.z=l.part==='arm'?l.side*(.55+swing*.35):l.side*.08});if(ch.userData.body)ch.userData.body.scale.y=.57+(moving?Math.sin(phase*2)*.025:Math.sin(t*.002+ch.userData.phase)*.012)});\n let candidate=null,best=999;for(const s of shopSpots){const d=Math.hypot(player.position.x-s.x,player.position.z-s.z);if(d<5&&d<best){best=d;candidate={name:s.name,desc:s.desc}}}npcs.forEach((n,i)=>{const d=player.position.distanceTo(n.position);if(d<2.7&&d<best){best=d;candidate={name:['Mira','Rolo','Lumi'][i],desc:['Hi! Welcome to MelaSquare. Want to explore the town together?','Hey there! The plaza is full of little surprises.','Hello, traveler! The garden is my favorite place.'][i]}}});nearby=candidate;interact.classList.toggle('hidden',!nearby);if(nearby){interactTitle.textContent=nearby.name;interactText.textContent=nearby.desc;document.querySelector('#interactAction').textContent='Interact'}
 }
 const target=new THREE.Vector3(player.position.x,1.1,player.position.z);
 const offset=new THREE.Vector3(Math.sin(yaw)*16,12,Math.cos(yaw)*16);
 camera.position.lerp(target.clone().add(offset),.07);camera.lookAt(target);
-[...npcs,player].forEach((ch,i)=>{ch.children.forEach((o,j)=>{if(o.geometry&&o.geometry.type==='SphereGeometry'&&j===0)o.scale.y=1+Math.sin(t*.004+ch.userData.phase)*.015})});
+
 renderer.render(scene,camera)}
 requestAnimationFrame(animate);
 window.addEventListener('error',e=>{console.error('MelaSquare 3D:',e.message)});
